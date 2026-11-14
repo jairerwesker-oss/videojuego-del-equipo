@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Estación Artemisa · Aventura en Órbita</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-space: #0b0705;
+  --panel: rgba(26, 17, 12, 0.86);
+  --panel-soft: rgba(38, 24, 17, 0.72);
+  --border: rgba(245, 158, 11, 0.25);
+  --gold: #fbbf24;
+  --amber: #f59e0b;
+  --copper: #ea580c;
+  --crimson: #ef4444;
+  --emerald: #22c55e;
+  --text: #fef3c7;
+  --muted: #d6b89c;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-sans: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--bg-space);
+  color: var(--text);
+  font-family: var(--font-sans);
+  padding: env(safe-area-inset-top, 14px) 14px env(safe-area-inset-bottom, 22px);
+  background-image:
+    radial-gradient(circle at 20% 15%, rgba(234, 88, 12, 0.14), transparent 50%),
+    radial-gradient(circle at 85% 85%, rgba(245, 158, 11, 0.12), transparent 55%);
+}
+
+.wrap { max-width: 1120px; margin: 0 auto; }
+
+/* Header cálido */
+header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  background: var(--panel);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.65);
+}
+
+.logo { display: flex; align-items: center; gap: 12px; }
+.logo-badge {
+  width: 44px; height: 44px; border-radius: 12px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.28), rgba(234, 88, 12, 0.22));
+  border: 1px solid var(--amber);
+  display: grid; place-items: center; font-size: 22px;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.28);
+}
+.logo h1 {
+  font-family: var(--font-display); font-size: 1.25rem; margin: 0;
+  letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px; color: #fffbeb;
+}
+.tag {
+  font-family: var(--font-mono); font-size: 0.68rem; padding: 3px 8px;
+  border-radius: 99px; background: rgba(245, 158, 11, 0.16); color: var(--gold);
+  border: 1px solid rgba(251, 191, 36, 0.35); text-transform: uppercase;
+}
+.logo p { margin: 2px 0 0; font-size: 0.82rem; color: var(--muted); }
+
+.header-controls {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+
+.tabs {
+  display: flex; gap: 6px; background: rgba(12, 7, 4, 0.75);
+  padding: 5px; border-radius: 12px; border: 1px solid var(--border);
+}
+.tab {
+  background: transparent; border: none; color: var(--muted);
+  font-family: var(--font-display); font-weight: 600; font-size: 0.86rem;
+  padding: 8px 14px; border-radius: 8px; cursor: pointer; transition: 0.2s;
+}
+.tab:hover { color: #fff; }
+.tab.active {
+  background: linear-gradient(135deg, #fbbf24, #d97706);
+  color: #140a04;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.4);
+}
+
+.lang-btn {
+  background: rgba(18, 11, 7, 0.9);
+  border: 1px solid var(--amber);
+  color: var(--gold);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.lang-btn:hover { background: rgba(245, 158, 11, 0.2); }
+
+/* Vista de Estación (5 pisos) */
+.station-layout {
+  display: grid;
+  grid-template-columns: 1.35fr 0.65fr;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 900px) { .station-layout { grid-template-columns: 1fr; } }
+
+.station-viewport {
+  background: #080504;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 18px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), inset 0 0 40px rgba(234, 88, 12, 0.08);
+}
+
+#stationCanvas {
+  width: 100%;
+  height: 540px;
+  display: block;
+  cursor: pointer;
+}
+
+.viewport-overlay {
+  position: absolute;
+  top: 14px; left: 16px; right: 16px;
+  display: flex; justify-content: space-between; align-items: center;
+  pointer-events: none;
+}
+
+.hud-chip {
+  font-family: var(--font-mono); font-size: 0.74rem;
+  background: rgba(18, 11, 7, 0.85); backdrop-filter: blur(8px);
+  border: 1px solid var(--border); padding: 6px 12px; border-radius: 8px;
+  color: var(--gold);
+}
+
+.deck-inspector {
+  background: var(--panel);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.deck-badge {
+  font-family: var(--font-mono); font-size: 0.75rem;
+  color: var(--amber); text-transform: uppercase; letter-spacing: 0.08em;
+}
+
+.deck-title { font-family: var(--font-display); font-size: 1.35rem; margin: 4px 0; color: #fffbeb; }
+.deck-story { font-size: 0.9rem; color: var(--muted); line-height: 1.55; margin: 0; }
+.deck-steps-list { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+
+.floor-pill {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px; border-radius: 10px;
+  background: rgba(14, 9, 6, 0.72); border: 1px solid rgba(245, 158, 11, 0.14);
+  font-size: 0.84rem; cursor: pointer; transition: 0.2s;
+}
+.floor-pill:hover { border-color: var(--amber); }
+.floor-pill.active-floor { border-color: var(--gold); background: rgba(245, 158, 11, 0.16); }
+.floor-pill.cleared { border-color: rgba(34, 197, 94, 0.45); }
+.floor-pill.locked { opacity: 0.48; cursor: not-allowed; }
+
+/* Botones */
+.btn {
+  font-family: var(--font-display); font-weight: 700; font-size: 0.9rem;
+  padding: 11px 16px; border-radius: 11px; border: 1px solid rgba(245, 158, 11, 0.28);
+  background: rgba(34, 21, 14, 0.92); color: #fef3c7; cursor: pointer;
+  transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn:hover:not(:disabled) {
+  border-color: var(--gold);
+  background: rgba(245, 158, 11, 0.18);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.22);
+}
+
+.btn-launch {
+  width: 100%; padding: 14px; font-size: 1rem;
+  background: linear-gradient(135deg, #fbbf24, #ea580c);
+  color: #140903; border: none;
+  box-shadow: 0 8px 25px rgba(234, 88, 12, 0.38);
+}
+.btn-launch:hover:not(:disabled) {
+  background: linear-gradient(135deg, #fde68a, #f59e0b);
+  box-shadow: 0 10px 30px rgba(245, 158, 11, 0.55);
+}
+
+.btn-danger { border-color: rgba(239, 68, 68, 0.45); color: #fca5a5; }
+.btn-danger:hover { background: rgba(239, 68, 68, 0.18); border-color: var(--crimson); }
+
+/* =====================================================================
+   MARCO DINÁMICO DE MISIÓN (25% VERDE, 50% AMARILLO, 75% ANARANJADO, 90% ROJO)
+   ===================================================================== */
+.mission-frame {
+  border-radius: 22px;
+  padding: 18px;
+  background: linear-gradient(180deg, rgba(34, 20, 13, 0.92), rgba(18, 10, 6, 0.95));
+  border: 3px solid rgba(245, 158, 11, 0.35);
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.12);
+  transition: border-color 0.45s ease, box-shadow 0.45s ease, background 0.45s ease;
+  position: relative;
+}
+
+.frame-status-ribbon {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 99px;
+  margin-bottom: 12px;
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--gold);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  transition: all 0.4s ease;
+}
+
+/* 25% -> Marco Verdoso */
+.mission-frame.tier-25 {
+  border-color: #22c55e;
+  box-shadow: 0 0 35px rgba(34, 197, 94, 0.38), inset 0 0 24px rgba(34, 197, 94, 0.12);
+}
+.mission-frame.tier-25 .frame-status-ribbon {
+  background: rgba(34, 197, 94, 0.18);
+  color: #86efac;
+  border-color: #22c55e;
+}
+
+/* 50% -> Marco Amarillo */
+.mission-frame.tier-50 {
+  border-color: #eab308;
+  box-shadow: 0 0 40px rgba(234, 179, 8, 0.45), inset 0 0 28px rgba(234, 179, 8, 0.15);
+}
+.mission-frame.tier-50 .frame-status-ribbon {
+  background: rgba(234, 179, 8, 0.22);
+  color: #fef08a;
+  border-color: #eab308;
+}
+
+/* 75% -> Marco Anaranjado */
+.mission-frame.tier-75 {
+  border-color: #f97316;
+  box-shadow: 0 0 48px rgba(249, 115, 22, 0.55), inset 0 0 32px rgba(249, 115, 22, 0.18);
+}
+.mission-frame.tier-75 .frame-status-ribbon {
+  background: rgba(249, 115, 22, 0.24);
+  color: #fed7aa;
+  border-color: #f97316;
+}
+
+/* 90% -> Marco Rojo Crítico Pulsante */
+.mission-frame.tier-90 {
+  border-color: #ef4444;
+  animation: redPulseFrame 0.9s infinite alternate;
+}
+.mission-frame.tier-90 .frame-status-ribbon {
+  background: rgba(239, 68, 68, 0.3);
+  color: #fecaca;
+  border-color: #ef4444;
+}
+
+@keyframes redPulseFrame {
+  from {
+    box-shadow: 0 0 35px rgba(239, 68, 68, 0.55), inset 0 0 25px rgba(239, 68, 68, 0.2);
+  }
+  to {
+    box-shadow: 0 0 70px rgba(239, 68, 68, 0.92), inset 0 0 45px rgba(239, 68, 68, 0.35);
+  }
+}
+
+.panel {
+  background: var(--panel-soft);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.risk-bar-wrap {
+  background: rgba(14, 8, 5, 0.85);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-top: 12px;
+}
+
+.risk-track {
+  height: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 6px;
+  position: relative;
+}
+
+.risk-marks {
+  position: relative;
+  height: 14px;
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  color: var(--muted);
+}
+.risk-marks span { position: absolute; transform: translateX(-50%); }
+
+.risk-fill {
+  height: 100%;
+  width: 10%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #22c55e 0%, #eab308 50%, #f97316 75%, #ef4444 92%);
+  transition: width 0.3s ease;
+}
+
+.sim-cols {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+}
+@media (max-width: 780px) { .sim-cols { grid-template-columns: 1fr; } }
+
+.sensor-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+}
+.sensor-box {
+  background: rgba(15, 9, 6, 0.78);
+  border: 1px solid rgba(245, 158, 11, 0.14);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+.sensor-top { display: flex; justify-content: space-between; font-size: 0.78rem; margin-bottom: 4px; }
+.mini-bar { height: 4px; background: rgba(255, 255, 255, 0.08); border-radius: 4px; overflow: hidden; }
+.mini-bar i { display: block; height: 100%; transition: width 0.25s; }
+
+.c-n { color: #86efac; } .b-n { background: #22c55e; }
+.c-w { color: #fde047; } .b-w { background: #eab308; }
+.c-c { color: #fca5a5; font-weight: 700; } .b-c { background: #ef4444; }
+
+#cv {
+  width: 100%; height: 230px; background: #0c0604;
+  border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.3); display: block;
+}
+
+.ai-box {
+  background: rgba(14, 8, 5, 0.92);
+  border-left: 4px solid var(--amber);
+  padding: 14px 16px;
+  border-radius: 0 12px 12px 0;
+  min-height: 64px;
+  margin-bottom: 14px;
+  font-size: 0.94rem;
+  color: #fef3c7;
+}
+
+.actions-wrap { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+
+/* Wiki & Awards */
+.grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.card-item {
+  background: rgba(16, 10, 6, 0.75); border: 1px solid rgba(245, 158, 11, 0.15);
+  border-radius: 12px; padding: 14px;
+}
+.card-item.on { border-color: rgba(251, 191, 36, 0.45); }
+.card-item.off { opacity: 0.5; border-style: dashed; }
+
+footer { text-align: center; font-size: 0.78rem; color: var(--muted); margin-top: 20px; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">
+      <div class="logo-badge">🛰️</div>
+      <div>
+        <h1><span id="t-brand">ESTACIÓN ARTEMISA</span> <span class="tag" id="t-tag">5 Cubiertas</span></h1>
+        <p id="t-subtitle">Asciende piso por piso conteniendo emergencias térmicas en órbita</p>
+      </div>
+    </div>
+    <div class="header-controls">
+      <button class="lang-btn" id="lang-toggle" onclick="toggleLanguage()">🌐 ES ➔ EN</button>
+      <nav class="tabs" id="nav-tabs">
+        <button class="tab active" data-tab="station" onclick="setTab('station')" id="tab-st">🏢 Estación</button>
+        <button class="tab" data-tab="wiki" onclick="setTab('wiki')"><span id="tab-wk">📚 Enciclopedia</span> <span id="ec-b"></span></button>
+        <button class="tab" data-tab="awards" onclick="setTab('awards')"><span id="tab-aw">🏆 Logros</span> <span id="lg-b"></span></button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- VISTA 1: INTERIOR DE LA ESTACIÓN (CORTE TRANSVERSAL) -->
+  <section id="view-station">
+    <div class="station-layout">
+      <div class="station-viewport">
+        <div class="viewport-overlay">
+          <div class="hud-chip" id="hud-orbit">ÓRBITA SOLAR · 408 KM · 0.00 G</div>
+          <div class="hud-chip" id="hud-cleared">CUBIERTAS ASEGURADAS: 0 / 5</div>
+        </div>
+        <canvas id="stationCanvas" width="700" height="540"></canvas>
+      </div>
+
+      <aside class="deck-inspector">
+        <div>
+          <div class="deck-badge" id="ins-floor">CUBIERTA 01 · ACCESO INFERIOR</div>
+          <h2 class="deck-title" id="ins-title">1 · La Primera Alerta</h2>
+          <p class="deck-story" id="ins-desc">Fuga menor de H₂ en electrólisis. Debes asegurar este nivel para desbloquear la escotilla hacia el Reactor Sabatier.</p>
+        </div>
+
+        <button class="btn btn-launch" id="btn-enter" onclick="startSelectedFloor()">
+          🚀 Entrar a Cubierta 01
+        </button>
+
+        <div style="border-top:1px solid rgba(245,158,11,0.16);padding-top:12px">
+          <div style="font-family:var(--font-mono);font-size:0.74rem;color:var(--muted);margin-bottom:8px" id="lbl-map">
+            MAPA DE ASCENSO POR PISOS (HAZ CLIC EN UN PISO):
+          </div>
+          <div class="deck-steps-list" id="floor-list"></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- VISTA 2: SIMULADOR DE MISIÓN -->
+  <section id="game" hidden>
+    <div class="mission-frame" id="mission-frame">
+      <div class="frame-status-ribbon" id="frame-ribbon">
+        ● PERÍMETRO ESTABLE · RIESGO &lt; 25%
+      </div>
+
+      <div class="panel" id="hud-panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+          <div>
+            <span class="deck-badge" id="g-floor-tag">CUBIERTA 01</span>
+            <h2 style="font-family:var(--font-display);margin:2px 0;font-size:1.25rem;color:#fffbeb" id="mt"></h2>
+            <div style="font-size:0.85rem;color:var(--muted)" id="mb"></div>
+          </div>
+          <div style="text-align:right;font-family:var(--font-mono)">
+            <div style="font-size:0.72rem;color:var(--muted)" id="lbl-time">TIEMPO EN CUBIERTA</div>
+            <div style="font-size:1.2rem;font-weight:700;color:var(--gold)" id="t-clock">00:00</div>
+          </div>
+        </div>
+
+        <div class="risk-bar-wrap">
+          <div style="display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:0.82rem">
+            <span id="lbl-risk">ÍNDICE DE REACCIÓN EN CADENA</span>
+            <span id="rk-txt" style="font-weight:700">10%</span>
+          </div>
+          <div class="risk-track"><div class="risk-fill" id="rk"></div></div>
+          <div class="risk-marks">
+            <span style="left:25%;color:#4ade80">25%</span>
+            <span style="left:50%;color:#facc15">50%</span>
+            <span style="left:75%;color:#fb923c">75%</span>
+            <span style="left:90%;color:#f87171">90%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sim-cols">
+        <div class="panel">
+          <div style="font-family:var(--font-display);font-weight:700;color:var(--gold);margin-bottom:10px;font-size:0.95rem" id="lbl-sensors">
+            📡 TELEMETRÍA TÉRMICA Y GASES
+          </div>
+          <div class="sensor-grid" id="sn"></div>
+          <div style="margin-top:10px;padding:8px 12px;background:rgba(14,8,5,0.85);border-radius:8px;font-family:var(--font-mono);font-size:0.8rem;display:flex;justify-content:space-between" id="pr"></div>
+        </div>
+
+        <div class="panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <span style="font-family:var(--font-display);font-weight:700;color:var(--gold);font-size:0.95rem" id="lbl-cam">🔥 CÁMARA DEL MÓDULO (0 G)</span>
+            <span style="font-family:var(--font-mono);font-size:0.74rem;color:var(--muted)" id="fd">Flujo: B → C</span>
+          </div>
+          <canvas id="cv" width="440" height="230"></canvas>
+          <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center">
+            <button class="btn" id="fan" style="padding:8px 12px;font-size:0.82rem">↻ Invertir Ventiladores</button>
+            <span style="font-size:0.78rem;color:var(--muted)" id="lbl-smoke">El humo sigue el flujo de aire</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:0">
+        <div style="font-family:var(--font-display);font-weight:700;color:var(--gold);margin-bottom:10px;font-size:0.95rem" id="lbl-ai-title">
+          🤖 ARTEMIS-IA · ASISTENTE DE CONTENCIÓN
+        </div>
+        <div class="ai-box" id="ai"></div>
+
+        <div id="gas-zone">
+          <div style="font-family:var(--font-mono);font-size:0.75rem;color:var(--muted);margin-bottom:8px" id="lbl-step1">
+            PASO 1 · IDENTIFICA EL GAS FUERA DE RANGO:
+          </div>
+          <div class="actions-wrap" id="gs"></div>
+        </div>
+
+        <div id="act-zone" hidden>
+          <div style="font-family:var(--font-mono);font-size:0.75rem;color:var(--muted);margin-bottom:8px" id="lbl-step2">
+            PASO 2 · EJECUTA EL PROTOCOLO EN ORDEN:
+          </div>
+          <div class="actions-wrap" id="ac"></div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:10px;border-top:1px solid rgba(245,158,11,0.16)">
+          <button class="btn" id="ex" style="padding:8px 12px;font-size:0.82rem">💡 Modo Explicar: OFF</button>
+          <button class="btn btn-danger" id="ab" style="padding:8px 12px;font-size:0.82rem">✖ Salir a la Estación</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VISTA 3: RESULTADO -->
+  <section id="end" class="panel" style="text-align:center;padding:30px 20px" hidden></section>
+
+  <!-- VISTA 4: ENCICLOPEDIA -->
+  <section id="view-wiki" class="panel" hidden>
+    <h2 style="font-family:var(--font-display);color:var(--gold);margin-top:0"><span id="lbl-wiki-title">📚 Enciclopedia Científica Artemisa</span> <span style="font-size:0.85rem;color:var(--muted)" id="ec"></span></h2>
+    <div class="grid-cards" id="en"></div>
+  </section>
+
+  <!-- VISTA 5: LOGROS -->
+  <section id="view-awards" class="panel" hidden>
+    <h2 style="font-family:var(--font-display);color:var(--gold);margin-top:0" id="lbl-awards-title">🏆 Condecoraciones de Ingeniería</h2>
+    <div class="grid-cards" id="lg"></div>
+  </section>
+
+  <footer id="footer-full">
+    <b>Créditos científicos:</b> Basado en investigaciones de NASA (SAFFIRE, ACME, FLEX, SoFIE, MOXIE), ESA y NIST. Demo educativa interactiva.
+  </footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+let lang = "es";
+
+const TXT = {
+  es: {
+    brand: "ESTACIÓN ARTEMISA",
+    tag: "5 Cubiertas",
+    subtitle: "Asciende piso por piso conteniendo emergencias térmicas en órbita",
+    tabSt: "🏢 Estación",
+    tabWk: "📚 Enciclopedia",
+    tabAw: "🏆 Logros",
+    orbit: "ÓRBITA SOLAR · 408 KM · 0.00 G",
+    cleared: "CUBIERTAS ASEGURADAS",
+    btnEnter: "Entrar a Cubierta",
+    reenter: "Reingresar a Cubierta (Asegurado)",
+    mapLbl: "MAPA DE ASCENSO POR PISOS (HAZ CLIC EN UN PISO):",
+    timeLbl: "TIEMPO EN CUBIERTA",
+    riskLbl: "ÍNDICE DE REACCIÓN EN CADENA",
+    sensorsLbl: "📡 TELEMETRÍA TÉRMICA Y GASES",
+    camLbl: "🔥 CÁMARA DEL MÓDULO (0 G)",
+    fanBtn: "↻ Invertir Ventiladores",
+    smokeLbl: "El humo sigue el flujo de aire",
+    aiTitle: "🤖 ARTEMIS-IA · ASISTENTE DE CONTENCIÓN",
+    step1: "PASO 1 · IDENTIFICA EL GAS FUERA DE RANGO:",
+    step2: "PASO 2 · EJECUTA EL PROTOCOLO EN ORDEN:",
+    exOff: "💡 Modo Explicar: OFF",
+    exOn: "💡 Modo Explicar: ON",
+    exitBtn: "✖ Salir a la Estación",
+    wikiTitle: "📚 Enciclopedia Científica Artemisa",
+    awardsTitle: "🏆 Condecoraciones de Ingeniería",
+    footerHTML: "<b>Créditos científicos:</b> Basado en investigaciones de NASA (SAFFIRE, ACME, FLEX, SoFIE, MOXIE), ESA y NIST. Demo educativa interactiva.",
+    wikiLockedTitle: "🔒 Ficha bloqueada",
+    wikiLockedDesc: "Asciende por la estación para desbloquear.",
+    backToStation: "Regresar al Interior de la Estación",
+    aiBrief: "Analiza los sensores del piso e identifica el gas que domina la fuga.",
+    aiExplainOn: "Explicar activo. En microgravedad no hay convección natural: llamas esféricas y humo que sigue a los ventiladores.",
+    aiExplainOff: "Explicar desactivado.",
+    statusSecured: "✔ CUBIERTA ESTABILIZADA",
+    statusActive: "⚠ EMERGENCIA TÉRMICA",
+    statusLocked: "🔒 ESCOTILLA PRESURIZADA",
+    gasBtnPrefix: "Es",
+    flowLbl: "Flujo"
+  },
+  en: {
+    brand: "ARTEMIS STATION",
+    tag: "5 Decks",
+    subtitle: "Ascend deck by deck containing thermal emergencies in orbit",
+    tabSt: "🏢 Station",
+    tabWk: "📚 Encyclopedia",
+    tabAw: "🏆 Awards",
+    orbit: "SOLAR ORBIT · 408 KM · 0.00 G",
+    cleared: "DECKS SECURED",
+    btnEnter: "Enter Deck",
+    reenter: "Re-enter Deck (Secured)",
+    mapLbl: "DECK ASCENT MAP (CLICK A DECK):",
+    timeLbl: "DECK ELAPSED TIME",
+    riskLbl: "CHAIN REACTION RISK INDEX",
+    sensorsLbl: "📡 THERMAL & GAS TELEMETRY",
+    camLbl: "🔥 MODULE CHAMBER (0 G)",
+    fanBtn: "↻ Reverse Fans",
+    smokeLbl: "Smoke follows airflow vectors",
+    aiTitle: "🤖 ARTEMIS-AI · CONTAINMENT ASSISTANT",
+    step1: "STEP 1 · IDENTIFY OUT-OF-RANGE GAS:",
+    step2: "STEP 2 · EXECUTE PROTOCOL IN ORDER:",
+    exOff: "💡 Explain Mode: OFF",
+    exOn: "💡 Explain Mode: ON",
+    exitBtn: "✖ Exit to Station",
+    wikiTitle: "📚 Artemis Scientific Encyclopedia",
+    awardsTitle: "🏆 Engineering Honors",
+    footerHTML: "<b>Scientific Credits:</b> Based on public research by NASA (SAFFIRE, ACME, FLEX, SoFIE, MOXIE), ESA, and NIST. Interactive educational demo.",
+    wikiLockedTitle: "🔒 Locked File",
+    wikiLockedDesc: "Ascend through the station to unlock.",
+    backToStation: "Return to Station Interior",
+    aiBrief: "Analyze floor sensors and identify the gas driving the leak.",
+    aiExplainOn: "Explain mode ON. In microgravity there's no natural convection: spherical flames and smoke follow fans.",
+    aiExplainOff: "Explain mode OFF.",
+    statusSecured: "✔ DECK STABILIZED",
+    statusActive: "⚠ THERMAL EMERGENCY",
+    statusLocked: "🔒 PRESSURIZED HATCH",
+    gasBtnPrefix: "It's",
+    flowLbl: "Flow"
+  }
+};
+
+const GAS = {
+  es: { h2: "H₂ (Hidrógeno)", ch4: "CH₄ (Metano)", co: "CO (Monóxido)", o2: "O₂ (Oxígeno)" },
+  en: { h2: "H₂ (Hydrogen)", ch4: "CH₄ (Methane)", co: "CO (Carbon Monoxide)", o2: "O₂ (Oxygen)" }
+};
+const GAS_S = { h2: "H₂", ch4: "CH₄", co: "CO", o2: "O₂" };
+
+const ACT = {
+  es: {
+    ident: "Identificar gas",
+    valv: "Cerrar válvulas de aislamiento",
+    vent: "Activar extracción",
+    aislar: "Aislar módulo",
+    ign: "Desactivar ignición",
+    evac: "Guiar tripulación",
+    dil: "Diluir con N₂",
+    purga: "Purgar al exterior",
+    sep: "Separar circuitos CH₄/O₂",
+    redO2: "Reducir O₂ del módulo"
+  },
+  en: {
+    ident: "Identify gas",
+    valv: "Close isolation valves",
+    vent: "Activate extraction",
+    aislar: "Isolate module",
+    ign: "Deactivate ignition",
+    evac: "Guide crew",
+    dil: "Dilute with N₂",
+    purga: "Purge to exterior",
+    sep: "Separate CH₄/O₂ circuits",
+    redO2: "Reduce module O₂"
+  }
+};
+
+const WHY = {
+  es: {
+    ident: "Sin identificar el gas, cualquier acción es una apuesta a ciegas.",
+    valv: "Cortar la fuente es siempre lo primero tras identificar.",
+    vent: "En microgravedad el gas no sube: solo la ventilación lo mueve.",
+    aislar: "Aislar evita que el gas viaje por el flujo hacia otro piso.",
+    ign: "Sin ignición se rompe un lado del triángulo del fuego.",
+    evac: "La tripulación sube a zona segura cuando la fuga está controlada.",
+    dil: "Diluir con N₂ saca la mezcla del rango de inflamabilidad.",
+    purga: "El CO se expulsa al vacío espacial: es tóxico e inflamable.",
+    sep: "CH₄ y O₂ separados no pueden formar mezcla explosiva.",
+    redO2: "Menos O₂ reduce drásticamente la intensidad de combustión."
+  },
+  en: {
+    ident: "Without identifying the gas, any action is a blind guess.",
+    valv: "Cutting the source is always priority after identification.",
+    vent: "In microgravity gas doesn't rise: only ventilation moves it.",
+    aislar: "Isolation prevents gas from traveling to adjacent decks.",
+    ign: "Without ignition source, one side of fire triangle is broken.",
+    evac: "Crew moves to safe zone once the leak is contained.",
+    dil: "Diluting with N₂ brings mixture out of flammability range.",
+    purga: "CO must be purged to space: toxic and flammable.",
+    sep: "Separated CH₄ and O₂ cannot form an explosive mixture.",
+    redO2: "Lowering O₂ dramatically reduces flame intensity."
+  }
+};
+
+const M = [
+  {
+    floorEs: "PISO 01 · CUBIERTA DE ELECTRÓLISIS",
+    floorEn: "DECK 01 · ELECTROLYSIS BAY",
+    shortEs: "Electrólisis H₂",
+    shortEn: "H₂ Electrolysis",
+    nEs: "1 · La Primera Alerta",
+    nEn: "1 · First Alert",
+    bEs: "Fuga menor de H₂ en celdas de electrólisis",
+    bEn: "Minor H₂ leak in electrolysis cells",
+    g: "h2", t: .9,
+    eqEs: "2H₂ + O₂ → 2H₂O + energía",
+    eqEn: "2H₂ + O₂ → 2H₂O + energy",
+    lEs: "El H₂ arde entre 4 % y 75 % en aire: un rango enorme y llama casi invisible.",
+    lEn: "H₂ burns between 4% and 75% in air: huge range and nearly invisible flame.",
+    s: ["ident", "valv", "vent", "ign"],
+    e: ["h2", "saffire"],
+    color: "#38bdf8"
+  },
+  {
+    floorEs: "PISO 02 · REACTOR SABATIER",
+    floorEn: "DECK 02 · SABATIER REACTOR",
+    shortEs: "Reactor Sabatier",
+    shortEn: "Sabatier Reactor",
+    nEs: "2 · Crisis en el Reactor Sabatier",
+    nEn: "2 · Sabatier Reactor Crisis",
+    bEs: "Falla de válvula antirretorno: CH₄ + O₂",
+    bEn: "Check valve failure: CH₄ + O₂ mixture",
+    g: "ch4", t: 1.1,
+    eqEs: "CH₄ + 2O₂ → CO₂ + 2H₂O + energía",
+    eqEn: "CH₄ + 2O₂ → CO₂ + 2H₂O + energy",
+    lEs: "CH₄ arde entre 5 % y 15 %. La reacción Sabatier exige circuitos separados.",
+    lEn: "CH₄ burns between 5% and 15%. Sabatier reaction requires separated circuits.",
+    s: ["ident", "sep", "valv", "aislar"],
+    e: ["ch4", "acme"],
+    color: "#fbbf24"
+  },
+  {
+    floorEs: "PISO 03 · LABORATORIO MOXIE",
+    floorEn: "DECK 03 · MOXIE LABORATORY",
+    shortEs: "Laboratorio MOXIE",
+    shortEn: "MOXIE Lab",
+    nEs: "3 · El Fantasma de MOXIE",
+    nEn: "3 · Ghost of MOXIE",
+    bEs: "Rotura de membrana: CO tóxico e inflamable",
+    bEn: "Membrane rupture: toxic & flammable CO",
+    g: "co", t: 1.2,
+    eqEs: "2CO + O₂ → 2CO₂ + energía",
+    eqEn: "2CO + O₂ → 2CO₂ + energy",
+    lEs: "El CO tiene doble riesgo: envenena a la tripulación y arde.",
+    lEn: "CO has double risk: poisons crew and burns.",
+    s: ["ident", "valv", "purga", "evac"],
+    e: ["co", "moxie", "flex"],
+    color: "#f97316"
+  },
+  {
+    floorEs: "PISO 04 · SOPORTE VITAL CENTRAL",
+    floorEn: "DECK 04 · CENTRAL LIFE SUPPORT",
+    shortEs: "Soporte Vital O₂",
+    shortEn: "O₂ Life Support",
+    nEs: "4 · Oxígeno Fuera de Control",
+    nEn: "4 · Out-of-Control Oxygen",
+    bEs: "Fuga en tanques de soporte vital: O₂ elevado",
+    bEn: "Life support tank leak: elevated O₂",
+    g: "o2", t: 1.3,
+    eqEs: "Material + O₂ → productos + calor acelerado",
+    eqEn: "Material + O₂ → products + rapid heat",
+    lEs: "El O₂ no arde, pero intensifica todo. Apolo 1 (1967) lo demostró.",
+    lEn: "O₂ doesn't burn alone, it intensifies everything. Apollo 1 (1967) proved it.",
+    s: ["ident", "valv", "redO2", "ign", "vent"],
+    e: ["o2", "apolo1"],
+    color: "#fb923c"
+  },
+  {
+    floorEs: "PISO 05 · CÚPULA Y PROP.-CRIOGÉNICA",
+    floorEn: "DECK 05 · CUPOLA & CRYOGENIC PROP.",
+    shortEs: "Cúpula Superior",
+    shortEn: "Upper Cupola",
+    nEs: "5 · Reacción en Cadena",
+    nEn: "5 · Chain Reaction",
+    bEs: "Incendio en múltiples depósitos (H₂ dominante)",
+    bEn: "Fire across multiple tanks (H₂ dominant)",
+    g: "h2", t: 1.6,
+    eqEs: "2H₂ + O₂ → 2H₂O + energía",
+    eqEn: "2H₂ + O₂ → 2H₂O + energy",
+    lEs: "Fuente, aislamiento, dilución y evacuación: todo a la vez, en orden perfecto.",
+    lEn: "Source, isolation, dilution and evacuation: all at once, in perfect order.",
+    s: ["ident", "valv", "aislar", "dil", "ign", "evac"],
+    e: ["sofie", "mir"],
+    color: "#ef4444"
+  }
+];
+
+const EN = {
+  h2: { es: ["H₂ · Hidrógeno", "Inflamable 4–75 %. Riesgo muy alto: fugas invisibles y llama casi incolora."], en: ["H₂ · Hydrogen", "Flammable 4–75%. High risk: invisible leaks and nearly colorless flame."] },
+  ch4: { es: ["CH₄ · Metano", "Inflamable 5–15 %. Se forma en el reactor Sabatier junto al H₂O."], en: ["CH₄ · Methane", "Flammable 5–15%. Formed in Sabatier reactor along with H₂O."] },
+  co: { es: ["CO · Monóxido de Carbono", "Tóxico e inflamable (12,5–74 %). Se produce al procesar CO₂ marciano."], en: ["CO · Carbon Monoxide", "Toxic & flammable (12.5–74%). Produced when processing Martian CO₂."] },
+  o2: { es: ["O₂ · Oxígeno", "No inflama, pero aviva el fuego. Por encima de ~23,5 % la estación entra en alerta."], en: ["O₂ · Oxygen", "Doesn't ignite, but fuels fire. Above ~23.5% cabin goes on alert."] },
+  saffire: { es: ["NASA SAFFIRE I–VI", "Incendios controlados en telas grandes dentro de la nave Cygnus: la llama se propaga distinto a la Tierra."], en: ["NASA SAFFIRE I–VI", "Controlled large-fabric fires inside Cygnus spacecraft showing unique orbital flame spread."] },
+  acme: { es: ["NASA ACME", "Estudio de llamas gaseosas laminares en microgravedad: adoptan forma esférica y producen menos hollín."], en: ["NASA ACME", "Study of gaseous laminar flames in microgravity: spherical shape with less soot."] },
+  flex: { es: ["NASA FLEX", "Descubrió las «llamas frías»: combustión química invisible a baja temperatura."], en: ["NASA FLEX", "Discovered 'cool flames': invisible low-temperature chemical combustion."] },
+  moxie: { es: ["NASA MOXIE", "Instrumento del rover Perseverance que produjo O₂ a partir del CO₂ marciano."], en: ["NASA MOXIE", "Perseverance rover instrument that produced O₂ from Martian atmospheric CO₂."] },
+  sofie: { es: ["NASA SoFIE", "Investigación de ignición y crecimiento temprano de llamas en materiales sólidos dentro de la ISS."], en: ["NASA SoFIE", "Investigation of ignition and early flame growth in solid materials on the ISS."] },
+  apolo1: { es: ["Incidente Apolo 1 (1967)", "Cabina presurizada con 100 % O₂ y cableado expuesto: una chispa causó una tragedia histórica."], en: ["Apollo 1 Incident (1967)", "100% O₂ pressurized cabin and exposed wiring: a spark caused historic tragedy."] },
+  mir: { es: ["Incidente Mir (1997)", "Un generador químico de oxígeno Vika falló, desatando un incendio intenso de 14 minutos en órbita."], en: ["Mir Incident (1997)", "A Vika chemical oxygen generator failed, triggering a 14-minute intense orbital fire."] },
+  tri: { es: ["Triángulo del Fuego", "Combustible + Oxidante + Energía de activación. Eliminar cualquiera de los tres extingue la reacción."], en: ["Fire Triangle", "Fuel + Oxidizer + Activation Energy. Removing any of the three extinguishes the reaction."] }
+};
+
+const LG = {
+  quim: { es: ["Químico Estelar", "Completa 3 pisos de la estación"], en: ["Stellar Chemist", "Complete 3 station decks"] },
+  hist: { es: ["Historiador Espacial", "Desbloquea Apolo 1 y Mir"], en: ["Space Historian", "Unlock Apollo 1 and Mir records"] },
+  ing: { es: ["Ingeniero NASA", "Completa un piso sin errores"], en: ["NASA Engineer", "Complete a deck with 0 errors"] },
+  cold: { es: ["Detective de Llamas Frías", "Desbloquea la ficha FLEX"], en: ["Cool Flame Detective", "Unlock NASA FLEX research"] }
+};
+
+let S = { un: new Set(["tri"]), lg: new Set(), done: new Set() };
+let selectedFloor = 0;
+let astro = { floor: 0, visualY: 0, xOffset: 0, dir: 1 };
+let cur = null, tm = null, fan = 1, expl = false, fanAngle = 0;
+let lastMsgType = "brief"; // "brief", "pickOk", "actOk", "error"
+let lastActionKey = "";
+let lastPickedGas = "";
+
+/* =========================================================================
+   SISTEMA DE AUDIO SINTETIZADO (Web Audio API)
+   ========================================================================= */
+let audioCtx = null;
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === "suspended") audioCtx.resume();
+}
+
+function playCorrectSound() {
+  try {
+    initAudio();
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+    [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, now + idx * 0.055);
+      gain.gain.setValueAtTime(0.13, now + idx * 0.055);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.055 + 0.24);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now + idx * 0.055);
+      osc.stop(now + idx * 0.055 + 0.24);
+    });
+  } catch(e) {}
+}
+
+function playErrorSound() {
+  try {
+    initAudio();
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+    [175, 125].forEach((freq, idx) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(freq, now + idx * 0.13);
+      gain.gain.setValueAtTime(0.16, now + idx * 0.13);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.13 + 0.26);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now + idx * 0.13);
+      osc.stop(now + idx * 0.13 + 0.26);
+    });
+  } catch(e) {}
+}
+
+/* =========================================================================
+   CAMBIO DE IDIOMA EN VIVO (ESPAÑOL <-> INGLÉS)
+   ========================================================================= */
+function toggleLanguage() {
+  lang = lang === "es" ? "en" : "es";
+  document.documentElement.lang = lang;
+  $("lang-toggle").textContent = lang === "es" ? "🌐 ES ➔ EN" : "🌐 EN ➔ ES";
+  updateTexts();
+  ren();
+
+  // Si hay una misión activa, traducir todos los controles en tiempo real
+  if (cur && !$("game").hidden) {
+    $("g-floor-tag").textContent = lang === "es" ? cur.m.floorEs : cur.m.floorEn;
+    $("mt").textContent = lang === "es" ? cur.m.nEs : cur.m.nEn;
+    $("mb").textContent = lang === "es" ? cur.m.bEs : cur.m.bEn;
+
+    if (!cur.id) {
+      $("gs").innerHTML = Object.keys(GAS[lang]).map(g => `<button class="btn" onclick="pick('${g}')">${TXT[lang].gasBtnPrefix} ${GAS[lang][g]}</button>`).join("");
+    } else {
+      const keys = Object.keys(ACT[lang]).filter(x => x !== "ident");
+      $("ac").innerHTML = keys.map(a => `<button class="btn" onclick="act('${a}')">${ACT[lang][a]}</button>`).join("");
+    }
+
+    // Re-traducir mensaje actual de ARTEMIS-IA
+    if (lastMsgType === "brief") {
+      say(`<b>${lang === "es" ? "ARTEMIS-IA:" : "ARTEMIS-AI:"}</b> ${lang === "es" ? cur.m.lEs : cur.m.lEn} ${TXT[lang].aiBrief}`);
+    } else if (lastMsgType === "pickOk") {
+      say(`<span style="color:#4ade80;font-weight:700">✔ ${lang === "es" ? "Confirmado" : "Confirmed"}: ${GAS_S[lastPickedGas]}.</span> ${WHY[lang].ident} ${lang === "es" ? "Ejecuta las acciones en orden." : "Execute actions in order."}`);
+    } else if (lastMsgType === "actOk") {
+      say(`<span style="color:#4ade80;font-weight:700">✔ ${ACT[lang][lastActionKey]}.</span> ${WHY[lang][lastActionKey]}` + (expl ? ` <i>(${lang === "es" ? "Triángulo del fuego: eliminamos combustible, oxidante o ignición." : "Fire triangle: eliminating fuel, oxidizer or ignition."})</i>` : ""));
+    }
+    upd();
+  }
+}
+
+function updateTexts() {
+  const t = TXT[lang];
+  $("t-brand").textContent = t.brand;
+  $("t-tag").textContent = t.tag;
+  $("t-subtitle").textContent = t.subtitle;
+  $("tab-st").textContent = t.tabSt;
+  $("tab-wk").textContent = t.tabWk;
+  $("tab-aw").textContent = t.tabAw;
+  $("hud-orbit").textContent = t.orbit;
+  $("lbl-map").textContent = t.mapLbl;
+  $("lbl-time").textContent = t.timeLbl;
+  $("lbl-risk").textContent = t.riskLbl;
+  $("lbl-sensors").textContent = t.sensorsLbl;
+  $("lbl-cam").textContent = t.camLbl;
+  $("fan").textContent = t.fanBtn;
+  $("lbl-smoke").textContent = t.smokeLbl;
+  $("lbl-ai-title").textContent = t.aiTitle;
+  $("lbl-step1").textContent = t.step1;
+  $("lbl-step2").textContent = t.step2;
+  $("ex").textContent = expl ? t.exOn : t.exOff;
+  $("ab").textContent = t.exitBtn;
+  $("lbl-wiki-title").textContent = t.wikiTitle;
+  $("lbl-awards-title").textContent = t.awardsTitle;
+  $("footer-full").innerHTML = t.footerHTML;
+}
+
+function getMaxUnlocked() {
+  return Math.min(M.length - 1, S.done.size);
+}
+
+function setTab(tab) {
+  if (cur && !$("game").hidden) return;
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+  $("view-station").hidden = tab !== "station";
+  $("view-wiki").hidden = tab !== "wiki";
+  $("view-awards").hidden = tab !== "awards";
+  $("end").hidden = true;
+}
+
+function selectFloor(idx) {
+  const maxU = getMaxUnlocked();
+  if (idx > maxU) return;
+  selectedFloor = idx;
+  astro.floor = idx;
+  updateInspector();
+}
+
+function updateInspector() {
+  const m = M[selectedFloor];
+  const isDone = S.done.has(selectedFloor);
+  const t = TXT[lang];
+  $("ins-floor").textContent = lang === "es" ? m.floorEs : m.floorEn;
+  $("ins-title").textContent = lang === "es" ? m.nEs : m.nEn;
+  $("ins-desc").textContent = (lang === "es" ? m.bEs : m.bEn) + ". " + (lang === "es" ? m.lEs : m.lEn);
+
+  const btn = $("btn-enter");
+  btn.innerHTML = isDone
+    ? `↻ ${t.reenter} (${lang === "es" ? "P" : "D"}0${selectedFloor + 1})`
+    : `🚀 ${t.btnEnter} 0${selectedFloor + 1}`;
+
+  const maxU = getMaxUnlocked();
+  let html = "";
+  for (let i = M.length - 1; i >= 0; i--) {
+    const unlocked = i <= maxU;
+    const cleared = S.done.has(i);
+    const active = i === selectedFloor;
+    const statusIcon = cleared ? "✅" : unlocked ? "🔥" : "🔒";
+    const prefix = lang === "es" ? "P0" : "D0";
+    const sName = lang === "es" ? M[i].shortEs : M[i].shortEn;
+    html += `
+      <div class="floor-pill ${active ? 'active-floor' : ''} ${cleared ? 'cleared' : ''} ${!unlocked ? 'locked' : ''}"
+           onclick="selectFloor(${i})">
+        <span><b>${prefix}${i + 1}</b> · ${sName}</span>
+        <span>${statusIcon}</span>
+      </div>`;
+  }
+  $("floor-list").innerHTML = html;
+  $("hud-cleared").textContent = `${t.cleared}: ${S.done.size} / ${M.length}`;
+}
+
+function ren() {
+  updateInspector();
+  const t = TXT[lang];
+  $("en").innerHTML = Object.keys(EN).map(k => S.un.has(k)
+    ? `<div class="card-item on"><b style="color:var(--gold)">${EN[k][lang][0]}</b><p style="margin:6px 0 0;font-size:0.84rem;color:var(--muted)">${EN[k][lang][1]}</p></div>`
+    : `<div class="card-item off"><b>${t.wikiLockedTitle}</b><p style="margin:6px 0 0;font-size:0.82rem;color:var(--muted)">${t.wikiLockedDesc}</p></div>`
+  ).join("");
+
+  $("lg").innerHTML = Object.keys(LG).map(k => {
+    const ok = S.lg.has(k);
+    return `<div class="card-item ${ok ? 'on' : 'off'}">
+      <div style="font-size:1.4rem;margin-bottom:4px">${ok ? '🏆' : '🔒'}</div>
+      <b>${LG[k][lang][0]}</b>
+      <div style="font-size:0.82rem;color:var(--muted);margin-top:4px">${LG[k][lang][1]}</div>
+    </div>`;
+  }).join("");
+
+  $("ec").textContent = `(${S.un.size}/${Object.keys(EN).length})`;
+  $("ec-b").textContent = `(${S.un.size}/${Object.keys(EN).length})`;
+  $("lg-b").textContent = `(${S.lg.size}/${Object.keys(LG).length})`;
+}
+
+function startSelectedFloor() {
+  initAudio();
+  go(selectedFloor);
+}
+
+function say(txt) { $("ai").innerHTML = txt; }
+
+function go(i) {
+  cur = { i, m: M[i], k: 0, r: 10, t: 0, err: 0, id: false };
+  lastMsgType = "brief";
+  $("view-station").hidden = true;
+  $("view-wiki").hidden = true;
+  $("view-awards").hidden = true;
+  $("end").hidden = true;
+  $("nav-tabs").style.opacity = "0.35";
+  $("nav-tabs").style.pointerEvents = "none";
+  $("game").hidden = false;
+
+  const t = TXT[lang];
+  $("g-floor-tag").textContent = lang === "es" ? cur.m.floorEs : cur.m.floorEn;
+  $("mt").textContent = lang === "es" ? cur.m.nEs : cur.m.nEn;
+  $("mb").textContent = lang === "es" ? cur.m.bEs : cur.m.bEn;
+  $("gas-zone").hidden = false;
+  $("act-zone").hidden = true;
+
+  say(`<b>${lang === "es" ? "ARTEMIS-IA:" : "ARTEMIS-AI:"}</b> ${lang === "es" ? cur.m.lEs : cur.m.lEn} ${t.aiBrief}`);
+  $("gs").innerHTML = Object.keys(GAS[lang]).map(g => `<button class="btn" onclick="pick('${g}')">${t.gasBtnPrefix} ${GAS[lang][g]}</button>`).join("");
+  $("ac").innerHTML = "";
+
+  clearInterval(tm);
+  tm = setInterval(tick, 1000);
+  upd();
+}
+
+function pick(g) {
+  if (cur.id) return;
+  if (g === cur.m.g) {
+    cur.id = true;
+    cur.k = 1;
+    lastMsgType = "pickOk";
+    lastPickedGas = g;
+    playCorrectSound();
+    say(`<span style="color:#4ade80;font-weight:700">✔ ${lang === "es" ? "Confirmado" : "Confirmed"}: ${GAS_S[g]}.</span> ${WHY[lang].ident} ${lang === "es" ? "Ejecuta las acciones en orden." : "Execute actions in order."}`);
+    $("gas-zone").hidden = true;
+    $("act-zone").hidden = false;
+    const keys = Object.keys(ACT[lang]).filter(x => x !== "ident");
+    $("ac").innerHTML = keys.map(a => `<button class="btn" onclick="act('${a}')">${ACT[lang][a]}</button>`).join("");
+  } else {
+    bad(`${GAS_S[g]} ${lang === "es" ? "no domina las lecturas de este piso. Revisa los sensores en alerta." : "does not dominate readings on this deck. Check alert sensors."}`);
+  }
+  upd();
+}
+
+function bad(txt) {
+  cur.err++;
+  cur.r = Math.min(100, cur.r + 18);
+  lastMsgType = "error";
+  playErrorSound();
+  say(`<span style="color:#f87171;font-weight:700">⚠️ ${lang === "es" ? "ERROR" : "ALERT"}:</span> ${txt}`);
+  if (cur.r >= 100) lose();
+}
+
+function act(a) {
+  const want = cur.m.s[cur.k];
+  if (a === want) {
+    cur.k++;
+    cur.r = Math.max(5, cur.r - 14);
+    lastMsgType = "actOk";
+    lastActionKey = a;
+    playCorrectSound();
+    say(`<span style="color:#4ade80;font-weight:700">✔ ${ACT[lang][a]}.</span> ${WHY[lang][a]}` + (expl ? ` <i>(${lang === "es" ? "Triángulo del fuego: eliminamos combustible, oxidante o ignición." : "Fire triangle: eliminating fuel, oxidizer or ignition."})</i>` : ""));
+    if (cur.k >= cur.m.s.length) win();
+  } else {
+    bad(`${ACT[lang][a]} ${lang === "es" ? "no es lo adecuado ahora. Revisa el orden: primero la fuente, luego el entorno." : "is not appropriate right now. Check the sequence: source first, then environment."}`);
+  }
+  upd();
+}
+
+function tick() {
+  cur.t++;
+  cur.r += cur.m.t * (cur.k >= 2 ? 0.4 : 1);
+  upd();
+  if (cur.r >= 100) lose();
+}
+
+function lv(v, w, c) { return v >= c ? "c" : v >= w ? "w" : "n"; }
+
+function updateMissionFrame(r) {
+  const frame = $("mission-frame");
+  const ribbon = $("frame-ribbon");
+  frame.classList.remove("tier-25", "tier-50", "tier-75", "tier-90");
+
+  if (r >= 90) {
+    frame.classList.add("tier-90");
+    ribbon.textContent = lang === "es" ? "🚨 ALERTA MÁXIMA (≥ 90%) · IGNICIÓN CRÍTICA INMINENTE" : "🚨 MAX ALERT (≥ 90%) · CRITICAL IGNITION IMMINENT";
+  } else if (r >= 75) {
+    frame.classList.add("tier-75");
+    ribbon.textContent = lang === "es" ? "🔥 PELIGRO ELEVADO (≥ 75%) · CONTENCIÓN URGENTE" : "🔥 ELEVATED DANGER (≥ 75%) · URGENT CONTAINMENT";
+  } else if (r >= 50) {
+    frame.classList.add("tier-50");
+    ribbon.textContent = lang === "es" ? "⚠️ ADVERTENCIA TÉRMICA (≥ 50%) · CONCENTRACIÓN ALTA" : "⚠️ THERMAL WARNING (≥ 50%) · HIGH CONCENTRATION";
+  } else if (r >= 25) {
+    frame.classList.add("tier-25");
+    ribbon.textContent = lang === "es" ? "🟢 MONITOREO ACTIVO (≥ 25%) · FUGA DETECTADA EN MÓDULO" : "🟢 ACTIVE MONITORING (≥ 25%) · LEAK DETECTED IN MODULE";
+  } else {
+    ribbon.textContent = lang === "es" ? "● PERÍMETRO ESTABLE · RIESGO < 25%" : "● STABLE PERIMETER · RISK < 25%";
+  }
+}
+
+function upd() {
+  const r = cur.r, m = cur.m.g, f = r / 100;
+  const mins = String(Math.floor(cur.t / 60)).padStart(2, "0");
+  const secs = String(cur.t % 60).padStart(2, "0");
+  $("t-clock").textContent = `${mins}:${secs}`;
+
+  updateMissionFrame(r);
+
+  const vals = {
+    h2: m === "h2" ? r * 0.045 : 0.2,
+    ch4: m === "ch4" ? r * 0.06 : 0,
+    co: m === "co" ? r * 0.35 : 0.1,
+    o2: m === "o2" ? 20.9 + r * 0.05 : 20.9
+  };
+
+  const sens = [
+    ["H₂ %", vals.h2.toFixed(1), lv(vals.h2, 2, 4), Math.min(100, (vals.h2 / 5) * 100)],
+    ["CH₄ %", vals.ch4.toFixed(1), lv(vals.ch4, 3, 5), Math.min(100, (vals.ch4 / 6) * 100)],
+    ["CO ppm", (vals.co * 10).toFixed(0), lv(vals.co, 10, 25), Math.min(100, (vals.co / 35) * 100)],
+    ["O₂ %", vals.o2.toFixed(1), lv(vals.o2, 22, 23.5), Math.min(100, ((vals.o2 - 19) / 7) * 100)],
+    [lang === "es" ? "Temp. módulo" : "Module Temp.", (40 + r * 0.9 | 0) + " °C", lv(r, 45, 75), Math.min(100, r)],
+    [lang === "es" ? "Presión" : "Pressure", (1 + f * 1.5).toFixed(2) + " bar", lv(r, 50, 80), Math.min(100, r)],
+    [lang === "es" ? "Válvulas" : "Valves", cur.k >= 2 ? (lang === "es" ? "CERRADAS" : "CLOSED") : (r > 40 ? (lang === "es" ? "FALLA" : "FAULT") : "OK"), r > 40 && cur.k < 2 ? "w" : "n", cur.k >= 2 ? 15 : Math.min(100, r)],
+    [lang === "es" ? "Humo" : "Smoke", (f * 400 | 0) + " µg/m³", lv(r, 50, 80), Math.min(100, r)]
+  ];
+
+  $("sn").innerHTML = sens.map(s => `
+    <div class="sensor-box">
+      <div class="sensor-top">
+        <span style="color:var(--muted)">${s[0]}</span>
+        <span class="c-${s[2]}">${s[1]}</span>
+      </div>
+      <div class="mini-bar"><i class="b-${s[2]}" style="width:${s[3]}%"></i></div>
+    </div>`).join("");
+
+  const nv = r >= 75 ? (lang === "es" ? "NIVEL 3 · INCENDIO ACTIVO" : "LEVEL 3 · ACTIVE FIRE") : r >= 40 ? (lang === "es" ? "NIVEL 2 · FUGA CONFIRMADA" : "LEVEL 2 · CONFIRMED LEAK") : (lang === "es" ? "NIVEL 1 · ANOMALÍA LEVE" : "LEVEL 1 · MILD ANOMALY");
+  $("pr").innerHTML = `<b class="c-${r >= 75 ? "c" : r >= 40 ? "w" : "n"}">${nv}</b><span>${lang === "es" ? "Riesgo" : "Risk"}: ${Math.min(99, r | 0)}%</span>`;
+  $("rk").style.width = Math.min(100, r) + "%";
+  $("rk-txt").textContent = Math.min(100, Math.round(r)) + "%";
+  $("fd").textContent = `${TXT[lang].flowLbl}: ${fan > 0 ? "B → C" : "C → B"}`;
+}
+
+function win() {
+  clearInterval(tm);
+  S.done.add(cur.i);
+  cur.m.e.forEach(k => S.un.add(k));
+  S.un.add(cur.m.g);
+
+  if (!cur.err) S.lg.add("ing");
+  if (S.done.size >= 3) S.lg.add("quim");
+  if (S.un.has("apolo1") && S.un.has("mir")) S.lg.add("hist");
+  if (S.un.has("flex")) S.lg.add("cold");
+
+  const nextFloor = Math.min(M.length - 1, cur.i + 1);
+  const unlockedNew = nextFloor > selectedFloor;
+  selectedFloor = nextFloor;
+  astro.floor = nextFloor;
+
+  fin(`
+    <div style="font-size:3rem;margin-bottom:8px">🛡️</div>
+    <h2 style="font-family:var(--font-display);color:#4ade80;font-size:1.6rem;margin:0">
+      ${lang === "es" ? `✔ Cubierta 0${cur.i + 1} Asegurada` : `✔ Deck 0${cur.i + 1} Secured`}
+    </h2>
+    <p style="color:var(--muted)">${lang === "es" ? "Errores" : "Errors"}: <b>${cur.err}</b> · ${lang === "es" ? "Tiempo" : "Time"}: <b>${cur.t} s</b></p>
+    <div style="display:inline-block;font-family:var(--font-mono);background:rgba(245,158,11,0.14);border:1px solid var(--gold);color:var(--gold);padding:10px 18px;border-radius:10px;margin:12px 0">
+      ${lang === "es" ? cur.m.eqEs : cur.m.eqEn}
+    </div>
+    <p style="max-width:540px;margin:0 auto 14px">${lang === "es" ? cur.m.lEs : cur.m.lEn}</p>
+    <p style="color:var(--amber);font-weight:600">
+      ${unlockedNew ? (lang === "es" ? `🔓 ¡Escotilla abierta! Tu astronauta ahora puede subir al Piso 0${nextFloor + 1}.` : `🔓 Hatch open! Your astronaut can now ascend to Deck 0${nextFloor + 1}.`) : (lang === "es" ? "🏆 ¡Has asegurado toda la Estación Artemisa!" : "🏆 You have secured the entire Artemis Station!")}
+    </p>
+  `);
+}
+
+function lose() {
+  clearInterval(tm);
+  fin(`
+    <div style="font-size:3rem;margin-bottom:8px">💥</div>
+    <h2 style="font-family:var(--font-display);color:#f87171;font-size:1.6rem;margin:0">
+      ${lang === "es" ? `✖ Reacción en Cadena en Piso 0${cur.i + 1}` : `✖ Chain Reaction on Deck 0${cur.i + 1}`}
+    </h2>
+    <p style="max-width:540px;margin:12px auto">${lang === "es" ? cur.m.lEs : cur.m.lEn}</p>
+    <div style="display:inline-block;font-family:var(--font-mono);background:rgba(239,68,68,0.14);border:1px solid #ef4444;color:#fca5a5;padding:10px 16px;border-radius:10px">
+      ${lang === "es" ? "Orden correcto" : "Correct order"}: ${cur.m.s.map(x => ACT[lang][x]).join(" → ")}
+    </div>
+  `);
+}
+
+function fin(h) {
+  $("game").hidden = true;
+  $("end").hidden = false;
+  $("end").innerHTML = h + `<div style="margin-top:20px"><button class="btn btn-launch" style="max-width:320px" onclick="back()">${TXT[lang].backToStation}</button></div>`;
+  ren();
+}
+
+function back() {
+  $("end").hidden = true;
+  $("game").hidden = true;
+  $("nav-tabs").style.opacity = "1";
+  $("nav-tabs").style.pointerEvents = "auto";
+  setTab("station");
+  ren();
+}
+
+$("ab").onclick = () => { clearInterval(tm); back(); };
+$("ex").onclick = () => {
+  expl = !expl;
+  $("ex").textContent = expl ? TXT[lang].exOn : TXT[lang].exOff;
+  say(expl ? TXT[lang].aiExplainOn : TXT[lang].aiExplainOff);
+};
+$("fan").onclick = () => { fan *= -1; if (cur) { cur.r += cur.k < 3 && cur.k > 0 ? 4 : 0; upd(); } };
+
+/* =========================================================================
+   CANVAS 1: INTERIOR DE LA ESTACIÓN (5 PISOS)
+   ========================================================================= */
+const sCv = $("stationCanvas"), sCx = sCv.getContext("2d");
+const stars = Array.from({ length: 85 }, () => ({
+  x: Math.random() * 700,
+  y: Math.random() * 540,
+  r: Math.random() * 1.6 + 0.3,
+  s: Math.random() * 0.22 + 0.05
+}));
+
+const HULL_X = 165, HULL_W = 370, TOP_Y = 58, FLOOR_H = 88;
+function getFloorY(floorIdx) { return TOP_Y + (4 - floorIdx) * FLOOR_H; }
+astro.visualY = getFloorY(0) + 46;
+
+sCv.addEventListener("click", e => {
+  const rect = sCv.getBoundingClientRect();
+  const mx = (e.clientX - rect.left) * (sCv.width / rect.width);
+  const my = (e.clientY - rect.top) * (sCv.height / rect.height);
+
+  if (mx >= HULL_X && mx <= HULL_X + HULL_W) {
+    for (let i = 0; i < 5; i++) {
+      const fy = getFloorY(i);
+      if (my >= fy && my <= fy + FLOOR_H) {
+        if (i <= getMaxUnlocked()) {
+          if (selectedFloor === i) startSelectedFloor();
+          else selectFloor(i);
+        }
+        break;
+      }
+    }
+  }
+});
+
+function drawStation() {
+  const t = Date.now() / 1000;
+  sCx.clearRect(0, 0, 700, 540);
+
+  const horizon = sCx.createLinearGradient(0, 420, 0, 540);
+  horizon.addColorStop(0, "rgba(0,0,0,0)");
+  horizon.addColorStop(1, "rgba(234, 88, 12, 0.22)");
+  sCx.fillStyle = horizon;
+  sCx.fillRect(0, 420, 700, 120);
+
+  stars.forEach(st => {
+    st.x -= st.s;
+    if (st.x < 0) st.x = 700;
+    sCx.fillStyle = `rgba(254, 243, 199, ${0.35 + Math.sin(t * 2 + st.y) * 0.25})`;
+    sCx.beginPath();
+    sCx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
+    sCx.fill();
+  });
+
+  [1, 3].forEach(fIdx => {
+    const py = getFloorY(fIdx) + 34;
+    sCx.strokeStyle = "#78716c";
+    sCx.lineWidth = 4;
+    sCx.beginPath();
+    sCx.moveTo(32, py + 10); sCx.lineTo(HULL_X, py + 10);
+    sCx.moveTo(HULL_X + HULL_W, py + 10); sCx.lineTo(668, py + 10);
+    sCx.stroke();
+
+    [[22, 128], [550, 128]].forEach(([px, pw]) => {
+      const pGrad = sCx.createLinearGradient(px, py - 8, px + pw, py + 28);
+      pGrad.addColorStop(0, "#451a03");
+      pGrad.addColorStop(0.5, "#78350f");
+      pGrad.addColorStop(1, "#451a03");
+      sCx.fillStyle = pGrad;
+      sCx.strokeStyle = "#f59e0b";
+      sCx.lineWidth = 1.3;
+      sCx.fillRect(px, py - 8, pw, 36);
+      sCx.strokeRect(px, py - 8, pw, 36);
+
+      sCx.strokeStyle = "rgba(251, 191, 36, 0.28)";
+      for (let gx = px + 22; gx < px + pw; gx += 22) {
+        sCx.beginPath(); sCx.moveTo(gx, py - 8); sCx.lineTo(gx, py + 28); sCx.stroke();
+      }
+      sCx.beginPath(); sCx.moveTo(px, py + 10); sCx.lineTo(px + pw, py + 10); sCx.stroke();
+    });
+  });
+
+  sCx.fillStyle = "#1c120c";
+  sCx.strokeStyle = "#fbbf24";
+  sCx.lineWidth = 2;
+  sCx.beginPath();
+  sCx.arc(350, TOP_Y, 68, Math.PI, 0);
+  sCx.fill();
+  sCx.stroke();
+
+  sCx.fillStyle = "rgba(251, 191, 36, 0.25)";
+  sCx.beginPath();
+  sCx.arc(350, TOP_Y - 6, 46, Math.PI + 0.3, -0.3);
+  sCx.fill();
+
+  const botY = TOP_Y + 5 * FLOOR_H;
+  sCx.fillStyle = "#291a12";
+  sCx.strokeStyle = "#d97706";
+  sCx.fillRect(275, botY, 150, 22);
+  sCx.strokeRect(275, botY, 150, 22);
+
+  const maxU = getMaxUnlocked();
+  for (let i = 0; i < 5; i++) {
+    const fy = getFloorY(i);
+    const isDone = S.done.has(i);
+    const isUnlocked = i <= maxU;
+    const isSelected = i === selectedFloor;
+
+    const grad = sCx.createLinearGradient(HULL_X, fy, HULL_X + HULL_W, fy + FLOOR_H);
+    if (isDone) {
+      grad.addColorStop(0, "rgba(20, 83, 45, 0.38)");
+      grad.addColorStop(1, "rgba(15, 23, 18, 0.85)");
+    } else if (isUnlocked) {
+      grad.addColorStop(0, "rgba(67, 36, 18, 0.78)");
+      grad.addColorStop(1, "rgba(28, 16, 10, 0.94)");
+    } else {
+      grad.addColorStop(0, "rgba(18, 11, 7, 0.95)");
+      grad.addColorStop(1, "rgba(10, 6, 4, 0.98)");
+    }
+    sCx.fillStyle = grad;
+    sCx.fillRect(HULL_X, fy, HULL_W, FLOOR_H);
+
+    sCx.strokeStyle = isUnlocked ? "rgba(251, 191, 36, 0.22)" : "rgba(255, 255, 255, 0.05)";
+    sCx.lineWidth = 2;
+    sCx.beginPath();
+    sCx.moveTo(HULL_X + 10, fy + 8);
+    sCx.lineTo(HULL_X + HULL_W - 65, fy + 8);
+    sCx.stroke();
+
+    for (let wx = HULL_X + 22; wx < HULL_X + HULL_W - 75; wx += 74) {
+      sCx.fillStyle = "rgba(12, 7, 4, 0.75)";
+      sCx.fillRect(wx, fy + 15, 50, 24);
+      sCx.strokeStyle = isUnlocked ? "rgba(245, 158, 11, 0.32)" : "rgba(255,255,255,0.06)";
+      sCx.lineWidth = 1;
+      sCx.strokeRect(wx, fy + 15, 50, 24);
+
+      if (isUnlocked) {
+        sCx.fillStyle = isDone ? "rgba(34, 197, 94, 0.35)" : "rgba(245, 158, 11, 0.25)";
+        sCx.fillRect(wx + 4, fy + 19, 26, 6);
+        sCx.fillStyle = isDone ? "#4ade80" : "#fbbf24";
+        sCx.fillRect(wx + 4, fy + 29, 14 + Math.sin(t * 3 + wx) * 8, 4);
+      }
+    }
+
+    const shaftX = HULL_X + HULL_W - 56;
+    sCx.fillStyle = "rgba(10, 6, 4, 0.78)";
+    sCx.fillRect(shaftX, fy, 46, FLOOR_H);
+    sCx.strokeStyle = "rgba(245, 158, 11, 0.28)";
+    sCx.strokeRect(shaftX, fy, 46, FLOOR_H);
+
+    if (i < 4) {
+      const hatchOpen = (i + 1) <= maxU;
+      sCx.fillStyle = hatchOpen ? "#22c55e" : "#ef4444";
+      sCx.fillRect(shaftX + 6, fy - 3, 34, 6);
+    }
+
+    if (isUnlocked && !isDone) {
+      const pulse = 0.55 + Math.sin(t * 5 + i) * 0.4;
+      const fireX = HULL_X + 155 + Math.sin(t * 2 + i) * 18;
+      const fireY = fy + 50;
+      const fg = sCx.createRadialGradient(fireX, fireY, 2, fireX, fireY, 24);
+      fg.addColorStop(0, "#fffbeb");
+      fg.addColorStop(0.45, M[i].color);
+      fg.addColorStop(1, "rgba(0,0,0,0)");
+      sCx.fillStyle = fg;
+      sCx.beginPath();
+      sCx.arc(fireX, fireY, 24, 0, Math.PI * 2);
+      sCx.fill();
+
+      sCx.fillStyle = `rgba(251, 146, 60, ${pulse})`;
+      sCx.font = "bold 10px 'JetBrains Mono', monospace";
+      sCx.fillText(TXT[lang].statusActive, HULL_X + 16, fy + 76);
+    } else if (isDone) {
+      sCx.fillStyle = "#4ade80";
+      sCx.font = "bold 10px 'JetBrains Mono', monospace";
+      sCx.fillText(TXT[lang].statusSecured, HULL_X + 16, fy + 76);
+    } else {
+      sCx.fillStyle = "#78716c";
+      sCx.font = "10px 'JetBrains Mono', monospace";
+      sCx.fillText(TXT[lang].statusLocked, HULL_X + 16, fy + 76);
+    }
+
+    sCx.fillStyle = isUnlocked ? "#fef3c7" : "#78716c";
+    sCx.font = "bold 12px 'Space Grotesk', sans-serif";
+    const prefix = lang === "es" ? "P0" : "D0";
+    const sName = lang === "es" ? M[i].shortEs : M[i].shortEn;
+    sCx.fillText(`${prefix}${i + 1} · ${sName.toUpperCase()}`, HULL_X + 16, fy + 56);
+
+    sCx.strokeStyle = isSelected ? "#fbbf24" : "rgba(245, 158, 11, 0.35)";
+    sCx.lineWidth = isSelected ? 2.6 : 1.2;
+    sCx.strokeRect(HULL_X, fy, HULL_W, FLOOR_H);
+  }
+
+  const targetY = getFloorY(astro.floor) + 46;
+  astro.visualY += (targetY - astro.visualY) * 0.1;
+  astro.xOffset += 0.45 * astro.dir;
+  if (astro.xOffset > 95) astro.dir = -1;
+  if (astro.xOffset < -55) astro.dir = 1;
+
+  drawAstronaut(sCx, HULL_X + 245 + astro.xOffset, astro.visualY + Math.sin(t * 3.5) * 3.5, astro.dir);
+
+  requestAnimationFrame(drawStation);
+}
+
+function drawAstronaut(ctx, x, y, dir) {
+  ctx.save();
+  ctx.translate(x, y);
+  if (dir < 0) ctx.scale(-1, 1);
+
+  ctx.fillStyle = "#d6d3d1";
+  ctx.fillRect(-13, -10, 7, 18);
+
+  ctx.fillStyle = "rgba(251, 191, 36, 0.75)";
+  ctx.beginPath();
+  ctx.arc(-16, 0, 4 + Math.sin(Date.now() / 80) * 1.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#fafaf9";
+  ctx.beginPath();
+  ctx.roundRect(-7, -9, 14, 19, 5);
+  ctx.fill();
+
+  ctx.strokeStyle = "#e7e5e4";
+  ctx.lineWidth = 4;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(-3, 10); ctx.lineTo(-6, 19);
+  ctx.moveTo(3, 10); ctx.lineTo(6, 18);
+  ctx.stroke();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.arc(0, -16, 9, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#f59e0b";
+  ctx.beginPath();
+  ctx.arc(3, -16, 6, -0.8, 0.9);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+/* =========================================================================
+   CANVAS 2: CÁMARA DE MICROGRAVEDAD
+   ========================================================================= */
+const cv = $("cv"), cx = cv.getContext("2d");
+let P = [];
+
+function drawSim() {
+  cx.clearRect(0, 0, 440, 230);
+  if (!cur || $("game").hidden) {
+    requestAnimationFrame(drawSim);
+    return;
+  }
+
+  const f = Math.min(1, cur.r / 100);
+  fanAngle += 0.08 * fan;
+
+  const bg = cx.createRadialGradient(220, 115, 20, 220, 115, 240);
+  bg.addColorStop(0, f > 0.75 ? "rgba(127, 29, 29, 0.45)" : "rgba(67, 36, 18, 0.42)");
+  bg.addColorStop(1, "rgba(12, 6, 4, 0.98)");
+  cx.fillStyle = bg;
+  cx.fillRect(0, 0, 440, 230);
+
+  cx.strokeStyle = "rgba(251, 191, 36, 0.08)";
+  cx.lineWidth = 1;
+  for (let x = 0; x < 440; x += 22) { cx.beginPath(); cx.moveTo(x, 0); cx.lineTo(x, 230); cx.stroke(); }
+  for (let y = 0; y < 230; y += 22) { cx.beginPath(); cx.moveTo(0, y); cx.lineTo(440, y); cx.stroke(); }
+
+  cx.fillStyle = "#29170e";
+  cx.fillRect(0, 0, 440, 18);
+  cx.fillRect(0, 212, 440, 18);
+  cx.strokeStyle = "#b45309";
+  cx.strokeRect(0, 0, 440, 18);
+  cx.strokeRect(0, 212, 440, 18);
+
+  [26, 414].forEach(vx => {
+    cx.save();
+    cx.translate(vx, 112);
+    cx.fillStyle = "#1c100a";
+    cx.strokeStyle = "#f59e0b";
+    cx.lineWidth = 1.5;
+    cx.beginPath();
+    cx.arc(0, 0, 18, 0, Math.PI * 2);
+    cx.fill();
+    cx.stroke();
+
+    cx.rotate(fanAngle);
+    cx.fillStyle = "#fbbf24";
+    for (let b = 0; b < 4; b++) {
+      cx.rotate(Math.PI / 2);
+      cx.fillRect(-2, -13, 4, 11);
+    }
+    cx.restore();
+  });
+
+  cx.strokeStyle = "rgba(251, 191, 36, 0.22)";
+  cx.lineWidth = 1.5;
+  for (let ax = 80; ax <= 360; ax += 70) {
+    cx.beginPath();
+    if (fan > 0) {
+      cx.moveTo(ax - 10, 42); cx.lineTo(ax + 10, 42); cx.lineTo(ax + 4, 37);
+    } else {
+      cx.moveTo(ax + 10, 42); cx.lineTo(ax - 10, 42); cx.lineTo(ax - 4, 37);
+    }
+    cx.stroke();
+  }
+
+  if (Math.random() < 0.72) {
+    P.push({
+      x: 220 + (Math.random() - 0.5) * 14,
+      y: 112 + (Math.random() - 0.5) * 14,
+      v: (Math.random() * 1.1 + 0.5) * fan,
+      y2: (Math.random() - 0.5) * 0.65,
+      a: 1,
+      spark: Math.random() < 0.25
+    });
+  }
+  P = P.filter(p => p.a > 0 && p.x > 36 && p.x < 404);
+  P.forEach(p => {
+    p.x += p.v * 1.8;
+    p.y += p.y2;
+    p.a -= 0.007;
+    if (p.spark) {
+      cx.fillStyle = `rgba(253, 224, 71, ${p.a})`;
+      cx.beginPath();
+      cx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+      cx.fill();
+    } else {
+      cx.fillStyle = `rgba(214, 184, 156, ${p.a * 0.42})`;
+      cx.beginPath();
+      cx.arc(p.x, p.y, 3.5 + f * 4, 0, Math.PI * 2);
+      cx.fill();
+    }
+  });
+
+  const R = 16 + f * 40 + Math.sin(Date.now() / 140) * 3;
+  cx.strokeStyle = f > 0.75 ? "rgba(239, 68, 68, 0.45)" : "rgba(251, 191, 36, 0.28)";
+  cx.lineWidth = 2;
+  cx.beginPath();
+  cx.arc(220, 112, R + 12, 0, Math.PI * 2);
+  cx.stroke();
+
+  const g = cx.createRadialGradient(220, 112, 2, 220, 112, R);
+  g.addColorStop(0, "rgba(255, 251, 235, 0.98)");
+  g.addColorStop(0.35, "rgba(251, 191, 36, 0.9)");
+  g.addColorStop(0.72, f > 0.5 ? "rgba(239, 68, 68, 0.8)" : "rgba(234, 88, 12, 0.65)");
+  g.addColorStop(1, "rgba(0, 0, 0, 0)");
+
+  cx.fillStyle = g;
+  cx.beginPath();
+  cx.arc(220, 112, R, 0, Math.PI * 2);
+  cx.fill();
+
+  cx.fillStyle = "#fde68a";
+  cx.font = "bold 10px 'JetBrains Mono', monospace";
+  cx.fillText(fan > 0 ? (lang === "es" ? "TURBINAS: B ➔ C" : "FANS: B ➔ C") : (lang === "es" ? "TURBINAS: C ➔ B" : "FANS: C ➔ B"), 12, 224);
+  cx.fillText(lang === "es" ? "LLAMA ESFÉRICA · GRAVEDAD CERO" : "SPHERICAL FLAME · ZERO G", 215, 224);
+
+  requestAnimationFrame(drawSim);
+}
+
+ren();
+drawStation();
+drawSim();
+</script>
+</body>
+</html>
